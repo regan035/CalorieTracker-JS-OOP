@@ -31,12 +31,14 @@ class CaloriesTracker {
   addMeal(meal) {
     this._meals.push(meal);
     this._totalCalories += meal.calories;
+    this._displayNewMeal(meal);
     this._render();
   }
 
   addWorkout(workout) {
     this._workouts.push(workout);
     this._totalCalories -= workout.calories;
+    this._displayNewWorkout(workout);
     this._render();
   }
 
@@ -102,6 +104,57 @@ class CaloriesTracker {
     progressEl.style.width = `${width}%`;
   }
 
+  //display new Items
+  _displayNewMeal(meal) {
+    const mealsEl = document.getElementById("meal-items");
+    const mealEl = document.createElement("div");
+    mealEl.classList.add("card", "my-2");
+
+    //set item id so it can be deleted
+    mealEl.setAttribute("data-id", meal.id);
+    mealEl.innerHTML = `
+    <div class="card-body">
+    <div class="d-flex align-items-center justify-content-between">
+      <h4 class="mx-1">${meal.name}</h4>
+      <div
+        class="fs-1 bg-primary text-white text-center rounded-2 px-2 px-sm-5"
+      >
+        ${meal.calories}
+      </div>
+      <button class="delete btn btn-danger btn-sm mx-2">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+  </div>
+    `;
+
+    mealsEl.appendChild(mealEl);
+  }
+
+  _displayNewWorkout(workout) {
+    const workoutsEl = document.getElementById("workout-items");
+    const workoutEl = document.createElement("div");
+    workoutEl.classList.add("card", "my-2");
+
+    workoutEl.setAttribute("data-id", workout.id);
+    workoutEl.innerHTML = `
+    <div class="card-body">
+    <div class="d-flex align-items-center justify-content-between">
+      <h4 class="mx-1">${workout.name}</h4>
+      <div
+        class="fs-1 bg-secondary text-white text-center rounded-2 px-2 px-sm-5"
+      >
+        ${workout.calories}
+      </div>
+      <button class="delete btn btn-danger btn-sm mx-2">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+  </div>
+    `;
+    workoutsEl.appendChild(workoutEl);
+  }
+
   //JS requires manually render
   _render() {
     this._displayCaloriesTotal();
@@ -117,55 +170,37 @@ class App {
     this._tracker = new CaloriesTracker();
     document
       .getElementById("meal-form")
-      .addEventListener("submit", this._newMeal.bind(this));
+      .addEventListener("submit", this._newItem.bind(this, "meal"));
 
     document
       .getElementById("workout-form")
-      .addEventListener("submit", this._newWorkout.bind(this));
+      .addEventListener("submit", this._newItem.bind(this, "workout"));
   }
 
-  _newMeal(e) {
+  _newItem(type, e) {
     e.preventDefault();
     console.log(this);
-    const name = document.getElementById("meal-name");
-    const calories = document.getElementById("meal-calories");
+    const name = document.getElementById(`${type}-name`);
+    const calories = document.getElementById(`${type}-calories`);
 
     //validate input
     if (name.value === "" || calories.value === "") {
       alert("Please input");
       return;
     }
-    const meal = new Meal(name.value, parseInt(calories.value));
-    this._tracker.addMeal(meal);
-
-    //clear the form
-    name.value = "";
-    calories.value = "";
-    //close collapse form after input
-    const collapseForm = document.getElementById("collapse-meal");
-    const collapse = new bootstrap.Collapse(collapseForm, { toggle: true });
-  }
-
-  _newWorkout(e) {
-    e.preventDefault();
-
-    const name = document.getElementById("workout-name");
-    const calories = document.getElementById("workout-calories");
-
-    //validate input
-    if (name.value === "" || calories.value === "") {
-      alert("Please input");
-      return;
+    if (type === "meal") {
+      const meal = new Meal(name.value, parseInt(calories.value));
+      this._tracker.addMeal(meal);
+    } else {
+      const workout = new Workout(name.value, parseInt(calories.value));
+      this._tracker.addWorkout(workout);
     }
-    const workout = new Workout(name.value, parseInt(calories.value));
-    this._tracker.addWorkout(workout);
 
     //clear the form
     name.value = "";
     calories.value = "";
-
     //close collapse form after input
-    const collapseForm = document.getElementById("collapse-workout");
+    const collapseForm = document.getElementById(`collapse-${type}`);
     const collapse = new bootstrap.Collapse(collapseForm, { toggle: true });
   }
 }
