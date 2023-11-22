@@ -42,6 +42,32 @@ class CaloriesTracker {
     this._render();
   }
 
+  removeMeal(id) {
+    const index = this._meals.findIndex((meal) => meal.id === id);
+    // if not match return -1
+    if (index != -1) {
+      const meal = this._meals[index];
+      this._totalCalories -= meal.calories;
+
+      // using splice(index,1)to remove this item
+      this._meals.splice(index, 1);
+      this._render();
+    }
+  }
+
+  removeWorkout(id) {
+    const index = this._workouts.findIndex((workout) => workout.id === id);
+    // if not match return -1
+    if (index != -1) {
+      const workout = this.workout[index];
+      this._totalCalories -= workout.calories;
+
+      // using splice(index,1)to remove this item
+      this._workouts.splice(index, 1);
+      this._render();
+    }
+  }
+
   //private methods
   _displayCaloriesTotal() {
     const totalCaloriesEl = document.getElementById("calories-total");
@@ -164,10 +190,12 @@ class CaloriesTracker {
     this._displayCaloriesProgress();
   }
 }
-
+//
 class App {
   constructor() {
     this._tracker = new CaloriesTracker();
+
+    //add new items
     document
       .getElementById("meal-form")
       .addEventListener("submit", this._newItem.bind(this, "meal"));
@@ -175,6 +203,15 @@ class App {
     document
       .getElementById("workout-form")
       .addEventListener("submit", this._newItem.bind(this, "workout"));
+
+    // remove items
+    document
+      .getElementById("meal-items")
+      .addEventListener("click", this._removeItem.bind(this, "meal"));
+
+    document
+      .getElementById("workout-items")
+      .addEventListener("click", this._removeItem.bind(this, "workout"));
   }
 
   _newItem(type, e) {
@@ -199,9 +236,26 @@ class App {
     //clear the form
     name.value = "";
     calories.value = "";
+
     //close collapse form after input
     const collapseForm = document.getElementById(`collapse-${type}`);
     const collapse = new bootstrap.Collapse(collapseForm, { toggle: true });
+  }
+
+  _removeItem(type, e) {
+    if (
+      e.target.classList.contains("delete") ||
+      e.target.classList.contains("fa-xmark")
+    ) {
+      if (confirm("Are you sure you want to delete")) {
+        const id = e.target.closest(".card").getAttribute("data-id");
+        console.log("id: " + id);
+        type === "meal"
+          ? this._tracker.removeMeal(id)
+          : this._tracker.removeWorkout(id);
+        e.target.closest(".card").remove();
+      }
+    }
   }
 }
 const app = new App();
