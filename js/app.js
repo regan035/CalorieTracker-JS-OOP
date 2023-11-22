@@ -75,6 +75,12 @@ class CaloriesTracker {
     this._render();
   }
 
+  setLimit(caloriesLimit) {
+    this._caloriesLimit = caloriesLimit;
+    this._displayCaloriesLimit();
+    this._render();
+  }
+
   //private methods
   _displayCaloriesTotal() {
     const totalCaloriesEl = document.getElementById("calories-total");
@@ -233,6 +239,11 @@ class App {
     document
       .getElementById("reset")
       .addEventListener("click", this._reset.bind(this));
+
+    // set daily limit
+    document
+      .getElementById("limit-form")
+      .addEventListener("submit", this._setLimit.bind(this));
   }
 
   _newItem(type, e) {
@@ -299,6 +310,25 @@ class App {
     document.getElementById("workout-items").innerHTML = "";
     document.getElementById("filter-meals").value = "";
     document.getElementById("filter-workouts").value = "";
+  }
+
+  _setLimit(e) {
+    //form needs to be prevent default
+    e.preventDefault();
+    console.log(this);
+    const limit = document.getElementById("limit");
+    if (limit.value === "") {
+      alert("Please add limit");
+      return;
+    }
+    //value passed in form is a string. needs to conver to number using '+'
+    this._tracker.setLimit(+limit.value);
+    //clear value form
+    limit.value = "";
+    //close bootstrap modal
+    const modalEl = document.getElementById("limit-modal");
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    modal.hide();
   }
 }
 const app = new App();
