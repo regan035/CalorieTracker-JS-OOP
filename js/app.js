@@ -16,8 +16,8 @@ class Workout {
 
 class CaloriesTracker {
   constructor() {
-    this._caloriesLimit = 2200;
-    this._totalCalories = 0;
+    this._caloriesLimit = Storage.getCaloriesLimit();
+    this._totalCalories = Storage.getTotalCalories(0);
     this._meals = [];
     this._workouts = [];
     this._displayCaloriesLimit();
@@ -31,6 +31,7 @@ class CaloriesTracker {
   addMeal(meal) {
     this._meals.push(meal);
     this._totalCalories += meal.calories;
+    Storage.updateTotalCalories(this._totalCalories);
     this._displayNewMeal(meal);
     this._render();
   }
@@ -38,6 +39,7 @@ class CaloriesTracker {
   addWorkout(workout) {
     this._workouts.push(workout);
     this._totalCalories -= workout.calories;
+    Storage.updateTotalCalories(this._totalCalories);
     this._displayNewWorkout(workout);
     this._render();
   }
@@ -48,6 +50,7 @@ class CaloriesTracker {
     if (index != -1) {
       const meal = this._meals[index];
       this._totalCalories -= meal.calories;
+      Storage.updateTotalCalories(this._totalCalories);
 
       // using splice(index,1)to remove this item
       this._meals.splice(index, 1);
@@ -61,6 +64,7 @@ class CaloriesTracker {
     if (index != -1) {
       const workout = this.workout[index];
       this._totalCalories -= workout.calories;
+      Storage.updateTotalCalories(this._totalCalories);
 
       // using splice(index,1)to remove this item
       this._workouts.splice(index, 1);
@@ -77,6 +81,7 @@ class CaloriesTracker {
 
   setLimit(caloriesLimit) {
     this._caloriesLimit = caloriesLimit;
+    Storage.setCaloriesLimit(caloriesLimit);
     this._displayCaloriesLimit();
     this._render();
   }
@@ -201,6 +206,34 @@ class CaloriesTracker {
     this._displayCaloriesBurned();
     this._displayCaloriesRemaining();
     this._displayCaloriesProgress();
+  }
+}
+
+// local storage
+class Storage {
+  static getCaloriesLimit(defaultLimit = 2000) {
+    let caloriesLimit;
+    if (localStorage.getItem("caloriesLimit") === null) {
+      caloriesLimit = defaultLimit;
+    } else {
+      caloriesLimit = +localStorage.getItem("caloriesLimit");
+    }
+    return caloriesLimit;
+  }
+  static setCaloriesLimit(caloriesLimit) {
+    localStorage.setItem("caloriesLimit", caloriesLimit);
+  }
+  static getTotalCalories(defaultCaloreis = 0) {
+    let totalCalories;
+    if (localStorage.getItem("totalCalories") === null) {
+      totalCalories = defaultCaloreis;
+    } else {
+      totalCalories = +localStorage.getItem("totalCalories");
+    }
+    return totalCalories;
+  }
+  static updateTotalCalories(calories) {
+    localStorage.setItem("totalCalories", calories);
   }
 }
 //
