@@ -17,21 +17,24 @@ class Workout {
 class CaloriesTracker {
   constructor() {
     this._caloriesLimit = Storage.getCaloriesLimit();
-    this._totalCalories = Storage.getTotalCalories(0);
-    this._meals = [];
-    this._workouts = [];
+    this._totalCalories = Storage.getTotalCalories();
+    this._meals = Storage.getMeals();
+    this._workouts = Storage.getWorkouts();
     this._displayCaloriesLimit();
     this._displayCaloriesTotal();
     this._displayCaloriesConsumed();
     this._displayCaloriesBurned();
     this._displayCaloriesRemaining();
     this._displayCaloriesProgress();
+
+    document.getElementById("limit").value = this._caloriesLimit;
   }
   // public methods
   addMeal(meal) {
     this._meals.push(meal);
     this._totalCalories += meal.calories;
     Storage.updateTotalCalories(this._totalCalories);
+    Storage.saveMeal(meal);
     this._displayNewMeal(meal);
     this._render();
   }
@@ -40,6 +43,7 @@ class CaloriesTracker {
     this._workouts.push(workout);
     this._totalCalories -= workout.calories;
     Storage.updateTotalCalories(this._totalCalories);
+    Storage.saveWorkout(workout);
     this._displayNewWorkout(workout);
     this._render();
   }
@@ -54,6 +58,7 @@ class CaloriesTracker {
 
       // using splice(index,1)to remove this item
       this._meals.splice(index, 1);
+      Storage.removeMeal(id);
       this._render();
     }
   }
@@ -62,12 +67,13 @@ class CaloriesTracker {
     const index = this._workouts.findIndex((workout) => workout.id === id);
     // if not match return -1
     if (index != -1) {
-      const workout = this.workout[index];
-      this._totalCalories -= workout.calories;
+      const workout = this._workouts[index];
+      this._totalCalories += workout.calories;
       Storage.updateTotalCalories(this._totalCalories);
 
       // using splice(index,1)to remove this item
       this._workouts.splice(index, 1);
+      Storage.removeWorkout(id);
       this._render();
     }
   }
@@ -76,6 +82,7 @@ class CaloriesTracker {
     this._totalCalories = 0;
     this._meals = [];
     this._workouts = [];
+    Storage.clearAll();
     this._render();
   }
 
@@ -84,6 +91,11 @@ class CaloriesTracker {
     Storage.setCaloriesLimit(caloriesLimit);
     this._displayCaloriesLimit();
     this._render();
+  }
+
+  loadItems() {
+    this._meals.forEach((meal) => this._displayNewMeal(meal));
+    this._workouts.forEach((workout) => this._displayNewWorkout(workout));
   }
 
   //private methods
@@ -235,6 +247,63 @@ class Storage {
   static updateTotalCalories(calories) {
     localStorage.setItem("totalCalories", calories);
   }
+
+  static getMeals() {
+    let meals;
+    if (localStorage.getItem("meals") === null) {
+      meals = [];
+    } else {
+      meals = JSON.parse(localStorage.getItem("meals"));
+    }
+    return meals;
+  }
+
+  static getWorkouts() {
+    let workouts;
+    if (localStorage.getItem("workouts") === null) {
+      workouts = [];
+    } else {
+      workouts = JSON.parse(localStorage.getItem("workouts"));
+    }
+    return workouts;
+  }
+
+  static saveMeal(meal) {
+    const meals = Storage.getMeals();
+    meals.push(meal);
+    localStorage.setItem("meals", JSON.stringify(meals));
+  }
+
+  static saveWorkout(workout) {
+    const workouts = Storage.getWorkouts();
+    workouts.push(workout);
+    localStorage.setItem("workouts", JSON.stringify(workouts));
+  }
+
+  static removeMeal(id) {
+    const meals = Storage.getMeals();
+    meals.forEach((meal, i) => {
+      if (meal.id === id) {
+        //using splice(i,1)to remove that item
+        meals.splice(i, 1);
+      }
+    });
+    localStorage.setItem("meals", JSON.stringify(meals));
+  }
+
+  static removeWorkout(id) {
+    const workouts = Storage.getWorkouts();
+    workouts.forEach((workout, i) => {
+      if (workout.id === id) {
+        workouts.splice(i, 1);
+      }
+    });
+    localStorage.setItem("workouts", JSON.stringify(workouts));
+  }
+
+  static clearAll() {
+    localStorage.clear();
+  }
 }
 //
 class App {
@@ -277,6 +346,8 @@ class App {
     document
       .getElementById("limit-form")
       .addEventListener("submit", this._setLimit.bind(this));
+
+    this._tracker.loadItems();
   }
 
   _newItem(type, e) {
@@ -367,9 +438,9 @@ class App {
 const app = new App();
 const tracker = new CaloriesTracker();
 
-const breakfast = new Meal("Breakfast", 400);
-tracker.addMeal(breakfast);
-const lunch = new Meal("Lunch", 350);
-tracker.addMeal(lunch);
-const run = new Workout("1 Mile Run", 320);
-tracker.addWorkout(run);
+// const breakfast = new Meal("Breakfast", 400);
+// tracker.addMeal(breakfast);
+// const lunch = new Meal("Lunch", 350);
+// tracker.addMeal(lunch);
+// const run = new Workout("1 Mile Run", 320);
+// tracker.addWorkout(run);
